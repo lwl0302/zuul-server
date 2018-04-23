@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: zuul-server
+  output:
+      ansi:
+        enabled: always
+  datasource:
+    driver-class-name: org.gjt.mm.mysql.Driver
+    url: jdbc:mysql://192.168.125.3:3306/desens_auth?autoReconnect=true&useUnicode=true&createDatabaseIfNotExist=true&characterEncoding=utf8&serverTimezone=CTT
+    username: root
+    password: root20180315
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+      dialect: org.hibernate.dialect.MySQL5Dialect
+
+server:
+  port: 50000
+  
+logging:
+  file: ./logs/zuul-server.log
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:1111/eureka
+  instance:
+    prefer-ip-address: true
+    non-secure-port: "${server.port}"
+
+zuul:
+  routes:
+    tms:
+      path: /tms/**
+      serviceId: task-management-server
+      customSensitiveHeaders: true
+    dms:
+      path: /dms/**
+      serviceId: datasource-management-server
+    dds:
+      path: /dds/**
+      serviceId: data-desensitive-server
+    as:
+      path: /auth/**
+      strip-prefix: false
+    sdas:
+      path: /sdas/**
+      serviceId: sensitive-data-analyzer-server
+  host:
+      socket-timeout-millis: 60000
+      connect-timeout-millis: 60000
+  max:
+      host:
+        connections: 500
+  ws:
+    brokerages:
+      tms:
+        end-points: /endpointChat
+        brokers:  /topic
+        destination-prefixes: /
+
+hystrix:
+  command:
+    default:
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          thread:
+            timeoutInMilliseconds: 60000
+
+ribbon:
+  ReadTimeout: 10000
+  ConnectTimeout: 10000
+
+token:
+  access-token:
+    expired-time: 30 # 单位是分钟
+  refresh-token:
+    expired-time: 10080 # 单位是分钟，刷新token 的过期时间大于等于访问token的过期时间
